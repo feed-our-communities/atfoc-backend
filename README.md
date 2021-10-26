@@ -1,6 +1,7 @@
 ### Docker setup
 The django port will be exposed at http://localhost:8000/
-After you start docker, to check status, go to http://localhost:8000/admin to see if you can pull up the admin panel
+
+After you start docker, to check statusm go to http://localhost:8000/admin to see if you can pull up the admin panel
 #### To start docker
 `sh scripts/start_docker.sh`
 #### To re-start docker/deploy code to running docker
