@@ -1,9 +1,9 @@
-#### To re-start docker/deploy code
+#### To start docker
 `sh scripts/start_docker.sh`
-
+#### To re-start docker/deploy code to running docker
+`sh scripts/restart_docker.sh`
 #### To reset your database content
 Delete database/ directory then restart your docker
-
 #### To execute command in docker
 First find the docker name/id
 
