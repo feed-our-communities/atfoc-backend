@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  atfoc_db_host:
+    image: postgres
+    volumes:
+      - ./database/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=atfoc_db
+      - POSTGRES_USER=atfoc_app
+      - POSTGRES_PASSWORD=1234
+    ports:
+      - "5432:5432"
+  atfoc_web:
+    build:
+        context: .
+        dockerfile: ./Dockerfile
+    command: sh ./scripts/django-start.sh
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - atfoc_db_host
