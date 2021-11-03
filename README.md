@@ -23,6 +23,10 @@ For example, you want to create a test user yourself to use the django admin pan
 
 `docker exec -it <docker id or name> python manage.py createsuperuser`
 
+#### Run unit test
+Unit test run automatically when deploy to docker. Use the following command if you want to run it on your own
+`docker exec -it $(docker ps -a | grep atfoc_web | awk '{print $1}') pytest <directory of the module you want to test>`
+
 #### Check Django log
 `docker-compose logs`
 
