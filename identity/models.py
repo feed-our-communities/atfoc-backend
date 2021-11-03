@@ -24,6 +24,7 @@ class ApplicationStatus(models.IntegerChoices):
     PENDING = 0,_('Pending')
     APRROVED = 1,_('Approved')
     DENIED = 2,_('Denied')
+    WITHDRAWN = 3,_('Withdrawn')
 
 class JoinRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
