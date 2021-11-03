@@ -10,8 +10,15 @@ class UserProfile(models.Model):
     Profile describes an user
     """
     user=models.OneToOneField(User, on_delete=models.CASCADE)
-    organization = models.ForeignKey('Organization', on_delete=models.SET_DEFAULT, default=None, null=True)
+    org_role = models.ForeignKey("OrgRole", on_delete=models.SET_NULL, null=True, blank=True)
+
+class OrgRole(models.Model):
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, default=None, null=True)
     is_admin=models.BooleanField(default=False)
+
+class OrgStatus(models.IntegerChoices):
+    ACTIVE = 0,_('Active')
+    INACTIVE = 1,_('Inactive')
     
 class Organization(models.Model):
     name=models.CharField(max_length=20, blank=False)
@@ -19,7 +26,10 @@ class Organization(models.Model):
     email=models.EmailField(blank=False)
     phone=PhoneNumberField(null=False, unique=False, blank=False) 
     url=models.URLField(default=None)
-
+    status = models.IntegerField(
+        choices=OrgStatus.choices,
+        default=OrgStatus.ACTIVE
+    )
 class ApplicationStatus(models.IntegerChoices):
     PENDING = 0,_('Pending')
     APRROVED = 1,_('Approved')
