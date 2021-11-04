@@ -8,25 +8,33 @@ from django.contrib.auth import authenticate
 class RegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, min_length=8, write_only=True, required=True)
     email = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())], required=True)
- 
+    first = serializers.CharField(max_length=128, min_length=1, required=False)
+    last = serializers.CharField(max_length=128, min_length=1, required=False)
+
     class Meta:
         model = User
-        fields = ['id', 'password', 'email']
+        fields = ['id', 'password', 'email', 'first', 'last']
 
     def create(self, validated_data):
         email = validated_data['email']
         password = validated_data['password']
+        first = validated_data.get('first', "")
+        last = validated_data.get('last', "")
         user = User.objects.create_user(email, email, password)
-        
+        user.first_name = first
+        user.last_name = last
+        user.save()
         profile = UserProfile.objects.create(user=user)
         profile.save()
         return user
 
     def to_representation(self, instance):
-        return_rep = dict()
-        return_rep['id'] = instance.id
-        return_rep['email'] = instance.email
-        return return_rep
+        return {
+            'id': instance.id,
+            'email': instance.email,
+            'first': instance.first_name,
+            'last': instance.last_name
+        }
 
 class CustomAuthTokenSerializer(serializers.Serializer):
     email = serializers.CharField(

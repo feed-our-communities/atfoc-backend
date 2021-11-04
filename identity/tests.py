@@ -18,14 +18,35 @@ def test_login(client):
 def test_register(client):
     client.post("/api/identity/register/", {
         "email": "email@example.com",
-        "password": "password"
+        "password": "password",
+        "first": "first",
+        "last": "last"
     })
-    user = User.objects.get(username="email@example.com", email="email@example.com")
+    user = User.objects.get(username="email@example.com")
+    assert user.email == "email@example.com"
+    assert user.first_name == "first"
+    assert user.last_name == "last"
     assert user.check_password("password")
 
 @pytest.mark.django_db()
+def test_info(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    user.first_name = "first"
+    user.last_name = "last"
+    user.save()
+    token = Token.objects.create(user=user)
+    response = client.get("/api/identity/info/", HTTP_AUTHORIZATION='Token ' + token.key)
+    expected = {
+        "id": user.id,
+        "email": "email@example.com",
+        "first": "first",
+        "last": "last"
+    }
+    assert response.data == expected
+
+@pytest.mark.django_db()
 def test_organization(client):
-    models.Organization.objects.create(
+    organization = models.Organization.objects.create(
         name="name",
         address="address",
         email="email@example.com",
@@ -37,7 +58,7 @@ def test_organization(client):
     token = Token.objects.create(user=user)
     response = client.get("/api/identity/organization/", HTTP_AUTHORIZATION='Token ' + token.key)
     expected = {
-        "id": 1,
+        "id": organization.id,
         "name": "name",
         "address": "address",
         "email": "email@example.com",
