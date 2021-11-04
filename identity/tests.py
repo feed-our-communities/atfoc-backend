@@ -46,7 +46,7 @@ def test_info(client):
     assert response.data == expected
 
 @pytest.mark.django_db()
-def test_organization(client):
+def test_list_organization(client):
     organization = models.Organization.objects.create(
         name="name",
         address="address",
@@ -89,3 +89,26 @@ def test_create_application(client):
     assert application.phone == "+16088675309"
     assert application.email == "email@example.com"
     assert application.url == "http://example.com"
+
+@pytest.mark.django_db()
+def test_list_application(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    organization = models.OrgApplication.objects.create(
+        name="name",
+        user=user,
+        address="address",
+        email="email@example.com",
+        phone="+16088675309",
+        url="http://example.com"
+    )
+    token = Token.objects.create(user=user)
+    response = client.get("/api/identity/application/", HTTP_AUTHORIZATION='Token ' + token.key)
+    expected = {
+        "id": organization.id,
+        "name": "name",
+        "address": "address",
+        "email": "email@example.com",
+        "phone": "+16088675309",
+        "url": "http://example.com"
+    }
+    assert dict(response.data[0]) == expected

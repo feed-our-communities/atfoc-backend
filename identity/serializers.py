@@ -82,6 +82,9 @@ class OrgApplicationSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+    status = serializers.HiddenField(
+        default=models.ApplicationStatus.PENDING
+    )
     class Meta:
         model = models.OrgApplication
-        fields = ["id", "user", "name", "address", "phone", "email", "url"]
+        fields = ["id", "user", "name", "address", "phone", "email", "url", "status"]
