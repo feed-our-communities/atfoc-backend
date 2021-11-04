@@ -1,3 +1,4 @@
+from collections import namedtuple
 import pytest
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
@@ -50,8 +51,8 @@ def test_organization(client):
         name="name",
         address="address",
         email="email@example.com",
-        phone="608-867-5309",
-        url="example.com",
+        phone="+16088675309",
+        url="http://example.com",
         status=models.OrgStatus.ACTIVE
     )
     user = User.objects.create_user("email@example.com", "email@example.com", "password")
@@ -62,8 +63,29 @@ def test_organization(client):
         "name": "name",
         "address": "address",
         "email": "email@example.com",
-        "phone": "608-867-5309",
-        "url": "example.com",
+        "phone": "+16088675309",
+        "url": "http://example.com",
         "status": 0
     }
     assert dict(response.data[0]) == expected
+
+@pytest.mark.django_db()
+def test_create_application(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    token = Token.objects.create(user=user)
+    data = {
+        "name": "name",
+        "address": "address",
+        "phone": "+16088675309",
+        "email": "email@example.com",
+        "url": "http://example.com"
+    }
+    response = client.post("/api/identity/application/", data, HTTP_AUTHORIZATION='Token ' + token.key)
+    print(response.data)
+    application = models.OrgApplication.objects.get(id=response.data["id"])
+    assert application.user == user
+    assert application.name == "name"
+    assert application.address == "address"
+    assert application.phone == "+16088675309"
+    assert application.email == "email@example.com"
+    assert application.url == "http://example.com"

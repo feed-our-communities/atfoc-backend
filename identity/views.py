@@ -1,4 +1,6 @@
+from django.db.models import query
 from django.shortcuts import render
+from rest_framework import permissions
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from identity import serializers
 from identity import models
@@ -45,3 +47,9 @@ class OrganizationViewSet(viewsets.mixins.ListModelMixin, viewsets.mixins.Retrie
     queryset = models.Organization.objects.filter(status=models.OrgStatus.ACTIVE)
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.OrganizationSerializer
+
+class OrgApplicationViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = models.OrgApplication.objects.all()
+    permissions_classes = (IsAuthenticated,)
+    serializer_class = serializers.OrgApplicationSerializer
+    filterset_fields = ['status']

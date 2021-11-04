@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from identity.models import Organization, UserProfile
+from identity import models
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
@@ -24,7 +24,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.first_name = first
         user.last_name = last
         user.save()
-        profile = UserProfile.objects.create(user=user)
+        profile = models.UserProfile.objects.create(user=user)
         profile.save()
         return user
 
@@ -75,5 +75,13 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Organization
+        model = models.Organization
         fields = ['id', 'name','address', 'email', 'phone', 'url', 'status']
+
+class OrgApplicationSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    class Meta:
+        model = models.OrgApplication
+        fields = ["id", "user", "name", "address", "phone", "email", "url"]
