@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from identity.models import UserProfile
+from identity.models import Organization, UserProfile
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
@@ -64,3 +64,8 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ['id', 'name','address', 'email', 'phone', 'url', 'status']

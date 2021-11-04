@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth.models import User
-from rest_framework.test import force_authenticate
+from rest_framework.authtoken.models import Token
+from identity import models
 
 # Create your tests here.
 
@@ -11,7 +12,6 @@ def test_login(client):
         "email": "email@example.com",
         "password": "password"
     })
-    print(response)
     assert len(response.data["token"]) > 1
 
 @pytest.mark.django_db()
@@ -22,3 +22,27 @@ def test_register(client):
     })
     user = User.objects.get(username="email@example.com", email="email@example.com")
     assert user.check_password("password")
+
+@pytest.mark.django_db()
+def test_organization(client):
+    models.Organization.objects.create(
+        name="name",
+        address="address",
+        email="email@example.com",
+        phone="608-867-5309",
+        url="example.com",
+        status=models.OrgStatus.ACTIVE
+    )
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    token = Token.objects.create(user=user)
+    response = client.get("/api/identity/organization/", HTTP_AUTHORIZATION='Token ' + token.key)
+    expected = {
+        "id": 1,
+        "name": "name",
+        "address": "address",
+        "email": "email@example.com",
+        "phone": "608-867-5309",
+        "url": "example.com",
+        "status": 0
+    }
+    assert dict(response.data[0]) == expected

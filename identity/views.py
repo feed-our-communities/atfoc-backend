@@ -1,24 +1,26 @@
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
-from .serializers import RegistrationSerializer, CustomAuthTokenSerializer
+from identity import serializers
+from identity import models
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework import viewsets
 
 # Create your views here.
 
 class RegistrationView(CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
-    serializer_class = RegistrationSerializer
+    serializer_class = serializers.RegistrationSerializer
 
 class UserInfoView(RetrieveAPIView):
     queryset = User.objects.all()
     permission_classes = (IsAuthenticated,)
-    serializer_class = RegistrationSerializer
+    serializer_class = serializers.RegistrationSerializer
 
     def get_object(self):
       queryset = self.get_queryset()
@@ -26,7 +28,7 @@ class UserInfoView(RetrieveAPIView):
       return obj
 
 class CustomAuthToken(ObtainAuthToken):
-    serializer_class = CustomAuthTokenSerializer
+    serializer_class = serializers.CustomAuthTokenSerializer
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
@@ -38,3 +40,8 @@ class CustomAuthToken(ObtainAuthToken):
             'user_id': user.pk,
             'email': user.email
         })
+
+class OrganizationViewSet(viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = models.Organization.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.OrganizationSerializer
