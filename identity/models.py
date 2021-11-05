@@ -45,7 +45,7 @@ class JoinRequest(models.Model):
         default=ApplicationStatus.PENDING
     )
 class OrgApplication(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, unique=True)
     status = models.IntegerField(
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.PENDING,
@@ -54,4 +54,4 @@ class OrgApplication(models.Model):
     address=models.CharField(max_length=50, blank=False)
     phone=PhoneNumberField(blank=False) 
     email=models.EmailField(default=None, blank=True)
-    url=models.URLField(default=None, blank=True) 
+    url=models.URLField(default=None, blank=True)

@@ -35,13 +35,39 @@ def test_info(client):
     user.first_name = "first"
     user.last_name = "last"
     user.save()
+    organization = models.Organization.objects.create(
+        name="name",
+        address="address",
+        email="email@example.com",
+        phone="+16088675309",
+        url="http://example.com",
+        status=models.OrgStatus.ACTIVE
+    )
+    models.UserProfile.objects.create(
+        user=user,
+        org_role=models.OrgRole.objects.create(
+            organization=organization,
+            is_admin=False
+        )
+    )
+    print(user)
     token = Token.objects.create(user=user)
     response = client.get("/api/identity/info/", HTTP_AUTHORIZATION='Token ' + token.key)
     expected = {
         "id": user.id,
         "email": "email@example.com",
         "first": "first",
-        "last": "last"
+        "last": "last",
+        "organization": {
+            "id": organization.id,
+            "name": "name",
+            "address": "address",
+            "email": "email@example.com",
+            "phone": "+16088675309",
+            "url": "http://example.com",
+            "status": 0
+        },
+        "is_org_admin": False
     }
     assert response.data == expected
 
