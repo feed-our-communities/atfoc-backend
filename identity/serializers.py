@@ -1,33 +1,39 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from identity.models import UserProfile
+from identity import models
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Organization
+        fields = ['id', 'name','address', 'email', 'phone', 'url', 'status']
+
 class RegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, min_length=8, write_only=True, required=True)
     email = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())], required=True)
- 
+    first = serializers.CharField(source="first_name", max_length=128, min_length=1, required=False)
+    last = serializers.CharField(source="last_name", max_length=128, min_length=1, required=False)
+    organization = OrganizationSerializer(source='userprofile.org_role.organization', read_only=True)
+    is_org_admin = serializers.BooleanField(source='userprofile.org_role.is_admin', read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'password', 'email']
+        fields = ['id', 'password', 'email', 'first', 'last', 'organization', 'is_org_admin']
 
     def create(self, validated_data):
         email = validated_data['email']
         password = validated_data['password']
+        first = validated_data['first_name']
+        last = validated_data['last_name']
         user = User.objects.create_user(email, email, password)
-        
-        profile = UserProfile.objects.create(user=user)
+        user.first_name = first
+        user.last_name = last
+        user.save()
+        profile = models.UserProfile.objects.create(user=user)
         profile.save()
         return user
-
-    def to_representation(self, instance):
-        return_rep = dict()
-        return_rep['id'] = instance.id
-        return_rep['email'] = instance.email
-        return return_rep
-
 class CustomAuthTokenSerializer(serializers.Serializer):
     email = serializers.CharField(
         label=_("Email"),
@@ -64,3 +70,14 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+class OrgApplicationSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    status = serializers.HiddenField(
+        default=models.ApplicationStatus.PENDING
+    )
+    class Meta:
+        model = models.OrgApplication
+        fields = ["id", "user", "name", "address", "phone", "email", "url", "status"]

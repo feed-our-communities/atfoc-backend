@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
 
 # Create your models here.
 
@@ -54,4 +55,13 @@ class OrgApplication(models.Model):
     address=models.CharField(max_length=50, blank=False)
     phone=PhoneNumberField(blank=False) 
     email=models.EmailField(default=None, blank=True)
-    url=models.URLField(default=None, blank=True) 
+    url=models.URLField(default=None, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=Q(status=ApplicationStatus.PENDING),
+                name='unique_user_pending'
+            ),
+        ]
