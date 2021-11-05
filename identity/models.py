@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
 
 # Create your models here.
 
@@ -45,7 +46,7 @@ class JoinRequest(models.Model):
         default=ApplicationStatus.PENDING
     )
 class OrgApplication(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
     status = models.IntegerField(
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.PENDING,
@@ -55,3 +56,12 @@ class OrgApplication(models.Model):
     phone=PhoneNumberField(blank=False) 
     email=models.EmailField(default=None, blank=True)
     url=models.URLField(default=None, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=Q(status=ApplicationStatus.PENDING),
+                name='unique_user_pending'
+            ),
+        ]
