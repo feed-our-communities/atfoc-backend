@@ -53,3 +53,9 @@ class OrgApplicationViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.Li
     permissions_classes = (IsAuthenticated,)
     serializer_class = serializers.OrgApplicationSerializer
     filterset_fields = ['status']
+
+class JoinRequestViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    queryset = models.JoinRequest.objects.all()
+    permissions_classes = (IsAuthenticated,)
+    serializer_class = serializers.JoinRequestSerializer
+    filterset_fields = ['status', 'organization']

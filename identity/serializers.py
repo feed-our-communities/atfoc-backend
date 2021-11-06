@@ -1,3 +1,5 @@
+from django.db.models import fields
+from django.db.models.fields.related import ForeignKey
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from identity import models
@@ -81,3 +83,11 @@ class OrgApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.OrgApplication
         fields = ["id", "user", "name", "address", "phone", "email", "url", "status"]
+
+class JoinRequestSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    class Meta:
+        model = models.JoinRequest
+        fields = ['id', 'user', 'organization', 'note', 'status']
