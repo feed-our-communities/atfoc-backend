@@ -45,6 +45,15 @@ class JoinRequest(models.Model):
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.PENDING
     )
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'organization'],
+                condition=Q(status=ApplicationStatus.PENDING),
+                name='unique_user_pending_joinrequest'
+            ),
+        ]
+
 class OrgApplication(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
     status = models.IntegerField(
@@ -62,6 +71,6 @@ class OrgApplication(models.Model):
             models.UniqueConstraint(
                 fields=['user'],
                 condition=Q(status=ApplicationStatus.PENDING),
-                name='unique_user_pending'
+                name='unique_user_pending_orgapplication'
             ),
         ]

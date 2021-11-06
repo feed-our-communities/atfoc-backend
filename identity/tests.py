@@ -3,6 +3,7 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from identity import models
+import json
 
 # Create your tests here.
 
@@ -50,7 +51,6 @@ def test_info(client):
             is_admin=False
         )
     )
-    print(user)
     token = Token.objects.create(user=user)
     response = client.get("/api/identity/info/", HTTP_AUTHORIZATION='Token ' + token.key)
     expected = {
@@ -138,3 +138,33 @@ def test_list_application(client):
         "url": "http://example.com"
     }
     assert dict(response.data[0]) == expected
+
+@pytest.mark.django_db()
+def test_create_joinrequest(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    user.first_name = "first"
+    user.last_name = "last"
+    user.save()
+    organization = models.Organization.objects.create(
+        name="name",
+        address="address",
+        email="email@example.com",
+        phone="+16088675309",
+        url="http://example.com",
+        status=models.OrgStatus.ACTIVE
+    )
+    models.UserProfile.objects.create(
+        user=user
+    )
+    token = Token.objects.create(user=user)
+    data = {
+        "note": "note",
+        "status": models.ApplicationStatus.PENDING,
+        "organization": organization.id
+    }
+    response = client.post("/api/identity/joinrequests/", data, HTTP_AUTHORIZATION='Token ' + token.key)
+    join_request = models.JoinRequest.objects.get(id=response.data['id'])
+    assert join_request.user.id == user.id
+    assert join_request.organization.id == organization.id
+    assert join_request.note == "note"
+    assert join_request.status == models.ApplicationStatus.PENDING
