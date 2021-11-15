@@ -60,7 +60,7 @@ class OrgApplication(models.Model):
     )
     name=models.CharField(max_length=20, blank=False)
     address=models.CharField(max_length=50, blank=False)
-    phone=PhoneNumberField(blank=False) 
+    phone=PhoneNumberField(blank=False)
     email=models.EmailField(default=None, blank=True)
     url=models.URLField(default=None, blank=True)
 
