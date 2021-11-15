@@ -4,8 +4,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
-# Create your models here.
-
 class UserProfile(models.Model):
     """
     Profile describes an user
@@ -26,14 +24,14 @@ class Organization(models.Model):
     address=models.CharField(max_length=50, blank=False)
     email=models.EmailField(blank=False)
     phone=PhoneNumberField(null=False, unique=False, blank=False) 
-    url=models.URLField(default=None)
+    url=models.URLField(default=None, blank=True)
     status = models.IntegerField(
         choices=OrgStatus.choices,
         default=OrgStatus.ACTIVE
     )
 class ApplicationStatus(models.IntegerChoices):
     PENDING = 0,_('Pending')
-    APRROVED = 1,_('Approved')
+    APPROVED = 1,_('Approved')
     DENIED = 2,_('Denied')
     WITHDRAWN = 3,_('Withdrawn')
 
