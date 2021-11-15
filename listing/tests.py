@@ -3,7 +3,9 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from identity.models import Organization, OrgStatus, UserProfile, OrgRole
-from listing import models
+from listing.models import Donation
+import tempfile
+import datetime
 import json
 
 # Create your tests here.
@@ -20,6 +22,12 @@ ORG_PHONE="+16081112222"
 ORG_URL="test.com"
 ORG_STATUS=OrgStatus.ACTIVE
 
+DONATION_DESCRIPTION="test description"
+DONATION_PIC=tempfile.NamedTemporaryFile(suffix=".jpg")
+DONATION_EXPIREATION=datetime.date.today()
+
+
+
 @pytest.fixture
 def organization(db) -> Organization:
     """
@@ -33,9 +41,9 @@ def organization(db) -> Organization:
         url = ORG_URL,
         status = ORG_STATUS,
     )
+    # create the two org role for the organization
     OrgRole.objects.create(organization=organization, is_admin=False)
     OrgRole.objects.create(organization=organization, is_admin=True)
-    # create the two org role for the organization
 
     return organization
 
@@ -75,7 +83,21 @@ def affiliated_admin_user_token(db, affiliated_admin_user) -> Token:
     token = Token.objects.create(user=affiliated_admin_user)
     return token
 
-def test_create_org(db, organization):
+@pytest.fixture
+def init_donation_listing(db, organization) -> Donation:
+    """
+    Create an initial listing for the organization
+    """
+    donation = Donation.objects.create(
+        organization = organization,
+        description = DONATION_DESCRIPTION,
+        picture = DONATION_PIC,
+        expiration_date = DONATION_EXPIREATION,
+    )
+    return donation
+
+
+def test_create_org_fixture(db, organization):
     """
     Test to check if fixture is setup correctly
     """
@@ -87,3 +109,15 @@ def test_create_org(db, organization):
     assert organization_get.phone == ORG_PHONE
     assert organization_get.url == ORG_URL
     assert organization_get.status == ORG_STATUS
+
+def test_create_donation_fixture(db, donation, organization):
+    """
+    Test to check if fixture is setup correctly
+    """
+    donation_id=donation.donation_id
+    donation_get = Donation.objects.get(donation_id=donation_id)
+    assert donation_get.organization.id == organization.id
+    assert donation_get.description == DONATION_DESCRIPTION
+    assert donation_get.picture == DONATION_PIC.name
+    assert donation_get.expiration_date == DONATION_EXPIREATION
+

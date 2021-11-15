@@ -8,6 +8,7 @@ djangorestframework==3.12.4
 iniconfig==1.1.1
 packaging==21.2
 phonenumbers==8.12.36
+Pillow==8.4.0
 pluggy==1.0.0
 psycopg2==2.9.1
 psycopg2-binary==2.9.1

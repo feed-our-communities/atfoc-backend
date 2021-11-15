@@ -8,9 +8,9 @@ class TraitType(models.IntegerChoices):
 
 class Donation(models.Model):
     donation_id = models.BigAutoField(primary_key=True)
-    org_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     description = models.TextField()
-    picture = models.FileField(upload_to='donations/')
+    picture = models.ImageField(upload_to='donations/', blank=False)
     expiration_date = models.DateField(blank=True, default=None)
     creation_time = models.DateTimeField(auto_now_add=True)
     deactivation_time = models.DateTimeField(null=True, blank=True, default=None)
