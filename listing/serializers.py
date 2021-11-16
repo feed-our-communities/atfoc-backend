@@ -8,15 +8,15 @@ from django.utils import timezone
 
 class DonationsSerializer(serializers.Serializer):
     org_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Organization.objects.all()) # required
-    picture = serializers.ImageField(allow_empty_file=False, use_url=True, read_only=True) # required
-    description = serializers.CharField(read_only=True)
-    expiration_date = serializers.DateField(read_only=True)
-    deactivation_time = serializers.DateTimeField()
+    picture = serializers.ImageField(allow_empty_file=False, use_url=True) # required
+    description = serializers.CharField()
+    expiration_date = serializers.DateTimeField()
+    deactivation_time = serializers.DateTimeField(required=False)
     traits = serializers.ListField(
         child=serializers.ChoiceField(choices=TraitType)
     )
 
-    def soft_delete(self, instance, validated_data):
+    def soft_delete(self, instance):
         """
         Update operation right now only support soft delete
         """
@@ -29,7 +29,7 @@ class DonationsSerializer(serializers.Serializer):
         org = validated_data.get('org_id', None)
         picture = validated_data.get('picture', None)
         description = validated_data.get('description', "")
-        expiration_date = validated_data.get('description', None)
+        expiration_date = validated_data.get('expiration_date', None)
 
         # create the donation listing
         donation = Donation.objects.create(
@@ -45,12 +45,13 @@ class DonationsSerializer(serializers.Serializer):
         for trait in traits:
             # do this so there are no repeat trait entries
             DonationTraits.objects.get_or_create(donation=donation, trait=trait)
+        
+        return donation
 
     def save(self):
         # modified from the django-rest source code. soft-delete when an instance is passed, otherwise create
         if self.instance is not None:
-            self.instance = self.soft_delete(
-                self.instance, self.validated_data)
+            self.instance = self.soft_delete(self.instance)
             assert self.instance is not None, (
                 '`update()` did not return an object instance.'
             )
@@ -58,6 +59,8 @@ class DonationsSerializer(serializers.Serializer):
             self.instance = self.create(self.validated_data)
             assert self.instance is not None, (
                 '`create()` did not return an object instance.')
+        return self.instance
+
     def to_representation(self, instance):
         """
         Take in a donation instance
@@ -65,13 +68,12 @@ class DonationsSerializer(serializers.Serializer):
         rep = dict()
         rep['donation_id'] = instance.donation_id
         rep['description'] = instance.description
-        rep['expiration date'] = instance.expiration_date
+        rep['expiration_date'] = instance.expiration_date
         rep['organization_id'] = instance.organization.id
         rep['picture'] = instance.picture.url
         trait_list = []
         traits = list(DonationTraits.objects.filter(donation=instance))
         for trait in traits:
-            print("trait is ... " + trait)
             trait_list.append(trait)
         rep['traits'] = trait_list
         return rep

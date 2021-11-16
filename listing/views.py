@@ -1,5 +1,7 @@
+from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from rest_framework.views import APIView
 from rest_framework import status
 from identity.models import Organization, OrgStatus, UserProfile, OrgRole
@@ -7,7 +9,6 @@ from listing.models import Donation
 from listing.serializers import DonationsSerializer
 from datetime import datetime
 from django.utils import timezone
-
 
 class DonationView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -41,14 +42,39 @@ class DonationView(APIView):
 
         # if query set emtpy 
         if not donations_filtered:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         serializer = DonationsSerializer(donations_filtered, many=True)
-        
         return Response(
                     {"donations": serializer.data},
                     status=status.HTTP_200_OK
                 )
         
+    def post(self, request, format=None):
+        serializer = DonationsSerializer(data=request.data)
+        if serializer.is_valid():
+            created_donation = serializer.save()
+            return Response({"donation_id": created_donation.donation_id}, status=status.HTTP_201_CREATED)
+        errors = serializer.errors
+        key = list(errors.keys())[0]
+        return Response(
+            {"message": "for key " + key + " "+  str(errors[key])},
+            status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, format=None):
+        donation_id = request.data.get('donation_id', None)
+        if donation_id is not None:
+            try:
+                donation = Donation.objects.get(donation_id=donation_id)
+            except (Donation.DoesNotExist, ValueError):
+                return Response(
+                    {"message": "Invalid org_id parameter value"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            serializer = DonationsSerializer(donation)
+            # soft_delete will be triggered in save()
+            serializer.save()
+            return Response(status=status.HTTP_200_OK)
+
 
 

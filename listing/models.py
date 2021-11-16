@@ -20,3 +20,4 @@ class DonationTraits(models.Model):
         choices=TraitType.choices,
         blank=False)
     donation = models.ForeignKey('Donation', on_delete=models.CASCADE)
+

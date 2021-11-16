@@ -4,13 +4,14 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from identity.models import Organization, OrgStatus, UserProfile, OrgRole
-from listing.models import Donation
+from listing.models import Donation, DonationTraits
 from django.core.files.uploadedfile import SimpleUploadedFile
 from datetime import datetime
 from django.test import override_settings
 import tempfile
 from django.utils import timezone
-import json
+from PIL import Image
+from six import BytesIO
 
 EMAIL="email@example.com"
 EMAIL_ADMIN="email-admin@example.com"
@@ -34,9 +35,13 @@ TEST_DIR = 'test_data'
 @override_settings(MEDIA_ROOT=(TEST_DIR))
 def picture():
     tempfile.mkdtemp(TEST_DIR)
+    image = BytesIO()
+    Image.new('RGB', (100, 100)).save(image, 'JPEG')
+    image.seek(0)
+
     return SimpleUploadedFile(
-            DONATION_PIC_NAME,
-            b"bytes for an image..."
+        DONATION_PIC_NAME,
+        image.getvalue()
     )
 
 @pytest.fixture
@@ -140,7 +145,7 @@ def test_get_donation_listing_all(client, db, affiliated_non_admin_user_token, i
             {
                 "description": donation.description, 
                 "donation_id": donation.donation_id,
-                "expiration date":donation.expiration_date,
+                "expiration_date":donation.expiration_date,
                 "organization_id": donation.organization.id,
                 "picture":donation.picture.url,
                 "traits": [] # no traits
@@ -159,7 +164,7 @@ def test_get_donation_listing_filter_by_org(client, db, affiliated_non_admin_use
             {
                 "description": donation.description, 
                 "donation_id": donation.donation_id,
-                "expiration date":donation.expiration_date,
+                "expiration_date":donation.expiration_date,
                 "organization_id": donation.organization.id,
                 "picture":donation.picture.url,
                 "traits": [] # no traits
@@ -178,7 +183,7 @@ def test_get_donation_listing_filter_by_status(client, db, affiliated_non_admin_
             {
                 "description": donation.description, 
                 "donation_id": donation.donation_id,
-                "expiration date":donation.expiration_date,
+                "expiration_date":donation.expiration_date,
                 "organization_id": donation.organization.id,
                 "picture":donation.picture.url,
                 "traits": [] # no traits
@@ -200,3 +205,67 @@ def test_get_donation_listing_filter_by_status_invalid(client, db, affiliated_no
 def test_get_donation_listing_empty(client, db, affiliated_non_admin_user_token):
     response = client.get(DONATION_URL + "?status=inactive", HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+@override_settings(MEDIA_ROOT=(TEST_DIR))
+def test_create_donation_listing_valid(client, db, affiliated_non_admin_user_token, organization, picture):
+    org_id=organization.id
+    description="test"
+    expiration_date=datetime.now(tz=timezone.utc)
+    trait1=0
+    trait2=1
+    post_data = {
+        "org_id": org_id, 
+        "description": description,
+        "picture": picture,
+        "expiration_date": expiration_date,
+        "traits": [trait1, trait2]
+    }
+
+    response = client.post(DONATION_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,)
+
+    created_donation = Donation.objects.get(donation_id=response.data["donation_id"])
+    traits = list(DonationTraits.objects.filter(donation=created_donation).values('trait'))
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert created_donation.organization.id == org_id
+    assert created_donation.description == description
+    assert created_donation.expiration_date == expiration_date
+    assert [traits[0]["trait"],traits[1]["trait"]] == [trait1, trait2]
+    assert created_donation.deactivation_time == None
+
+def test_create_donation_listing_org_invalid(client, db, affiliated_non_admin_user_token, picture):
+    org_id="fake"
+    description="test"
+    expiration_date=datetime.now(tz=timezone.utc)
+    trait1=0
+    trait2=1
+    post_data = {
+        "org_id": org_id, 
+        "description": description,
+        "picture": picture,
+        "expiration_date": expiration_date,
+        "traits": [trait1, trait2]
+    }
+
+    response = client.post(DONATION_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+def test_delete_donation_listing(client, db, affiliated_non_admin_user_token, init_donation_listing):
+    post_data = {
+        "donation_id": init_donation_listing.donation_id, 
+    }
+
+    response = client.delete(DONATION_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,
+        content_type='application/json')
+    
+    donation = Donation.objects.get(donation_id=init_donation_listing.donation_id)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert donation.deactivation_time != None
