@@ -2,12 +2,14 @@ from collections import namedtuple
 import pytest
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 from identity.models import Organization, OrgStatus, UserProfile, OrgRole
 from listing.models import Donation
 from django.core.files.uploadedfile import SimpleUploadedFile
-import datetime
+from datetime import datetime
 from django.test import override_settings
 import tempfile
+from django.utils import timezone
 import json
 
 EMAIL="email@example.com"
@@ -24,7 +26,7 @@ ORG_STATUS=OrgStatus.ACTIVE
 
 DONATION_DESCRIPTION="test description"
 DONATION_PIC_NAME="image_test.jpg"
-DONATION_EXPIREATION=datetime.date.today()
+DONATION_EXPIREATION=datetime.now(tz=timezone.utc)
 
 TEST_DIR = 'test_data'
 
@@ -130,26 +132,71 @@ def test_create_donation_fixture(db, init_donation_listing, organization):
     assert donation_get.description == DONATION_DESCRIPTION
     assert donation_get.expiration_date == DONATION_EXPIREATION
 
-@override_settings(MEDIA_ROOT=(TEST_DIR))
 def test_get_donation_listing_all(client, db, affiliated_non_admin_user_token, init_donation_listing):
     response = client.get(DONATION_URL, HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
     donation = init_donation_listing
     expected = {
         "donations": [
             {
-                "donation_id": donation.donation_id,
-                "organization_id": donation.organization.id,
                 "description": donation.description, 
+                "donation_id": donation.donation_id,
                 "expiration date":donation.expiration_date,
+                "organization_id": donation.organization.id,
                 "picture":donation.picture.url,
                 "traits": [] # no traits
             }
         ]
     }
+
+    assert response.status_code == status.HTTP_200_OK
     assert response.data == expected
 
-# def test_get_donation_listing_filter_by_org(client, db, affiliated_non_admin_user_token, init_donation_listing):
+def test_get_donation_listing_filter_by_org(client, db, affiliated_non_admin_user_token, init_donation_listing):
+    donation = init_donation_listing
+    response = client.get(DONATION_URL + "?org_id=" + str(donation.organization.id), HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
+    expected = {
+        "donations": [
+            {
+                "description": donation.description, 
+                "donation_id": donation.donation_id,
+                "expiration date":donation.expiration_date,
+                "organization_id": donation.organization.id,
+                "picture":donation.picture.url,
+                "traits": [] # no traits
+            }
+        ]
+    }
 
-# def test_get_donation_listing_filter_by_org_invalid(client, db, affiliated_non_admin_user_token, init_donation_listing):
-# def test_get_donation_listing_filter_by_status(client, db, affiliated_non_admin_user_token, init_donation_listing):
-# def test_get_donation_listing_filter_by_status_invalid(client, db, affiliated_non_admin_user_token, init_donation_listing):
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == expected
+
+def test_get_donation_listing_filter_by_status(client, db, affiliated_non_admin_user_token, init_donation_listing):
+    donation = init_donation_listing
+    response = client.get(DONATION_URL + "?status=active", HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
+    expected = {
+        "donations": [
+            {
+                "description": donation.description, 
+                "donation_id": donation.donation_id,
+                "expiration date":donation.expiration_date,
+                "organization_id": donation.organization.id,
+                "picture":donation.picture.url,
+                "traits": [] # no traits
+            }
+        ]
+    }
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == expected
+
+def test_get_donation_listing_filter_by_org_invalid(client, db, affiliated_non_admin_user_token):
+    response = client.get(DONATION_URL + "?org_id=fake", HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+def test_get_donation_listing_filter_by_status_invalid(client, db, affiliated_non_admin_user_token):
+    response = client.get(DONATION_URL + "?status=invalid", HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+def test_get_donation_listing_empty(client, db, affiliated_non_admin_user_token):
+    response = client.get(DONATION_URL + "?status=inactive", HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
+    assert response.status_code == status.HTTP_204_NO_CONTENT

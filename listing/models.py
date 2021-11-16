@@ -11,7 +11,7 @@ class Donation(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     description = models.TextField()
     picture = models.ImageField(upload_to='donations/', blank=False)
-    expiration_date = models.DateField(blank=True, default=None)
+    expiration_date = models.DateTimeField(null=True, blank=True, default=None)
     creation_time = models.DateTimeField(auto_now_add=True)
     deactivation_time = models.DateTimeField(null=True, blank=True, default=None)
 
@@ -19,4 +19,4 @@ class DonationTraits(models.Model):
     trait = models.IntegerField(
         choices=TraitType.choices,
         blank=False)
-    donation_id = models.ForeignKey('Donation', on_delete=models.CASCADE)
+    donation = models.ForeignKey('Donation', on_delete=models.CASCADE)
