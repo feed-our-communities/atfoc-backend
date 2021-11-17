@@ -1,11 +1,11 @@
-from django.db.models import fields
-from django.db.models.fields.related import ForeignKey
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from identity import models
 from rest_framework.validators import UniqueValidator
+from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
+
+from identity import models
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:

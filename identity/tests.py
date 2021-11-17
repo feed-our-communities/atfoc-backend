@@ -1,10 +1,8 @@
-from collections import namedtuple
 import pytest
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from identity import models
-from identity.models import Organization, OrgStatus, OrgRole, UserProfile
 
 EMAIL="email@example.com"
 EMAIL_ADMIN="email-admin@example.com"
@@ -15,18 +13,18 @@ ORG_ADDRESS="333 East Campus Mall Madison, WI"
 ORG_EMAIL="test@test.com"
 ORG_PHONE="+16081112222"
 ORG_URL="test.com"
-ORG_STATUS=OrgStatus.ACTIVE
+ORG_STATUS=models.OrgStatus.ACTIVE
 
 MEMBERS_URL="/api/identity/org/members/"
 """
 Fixtures
 """
 @pytest.fixture
-def organization(db) -> Organization:
+def organization(db) -> models.Organization:
     """
     Return an active organization
     """
-    organization = Organization.objects.create(
+    organization = models.Organization.objects.create(
         name = ORG_NAME,
         address = ORG_ADDRESS,
         email = ORG_EMAIL,
@@ -35,8 +33,8 @@ def organization(db) -> Organization:
         status = ORG_STATUS,
     )
     # create the two org role for the organization
-    OrgRole.objects.create(organization=organization, is_admin=False)
-    OrgRole.objects.create(organization=organization, is_admin=True)
+    models.OrgRole.objects.create(organization=organization, is_admin=False)
+    models.OrgRole.objects.create(organization=organization, is_admin=True)
 
     return organization
 
@@ -46,8 +44,8 @@ def affiliated_non_admin_user(db, organization) -> User:
     Return an non-admin User object(affiliated)
     """
     user = User.objects.create_user(EMAIL, EMAIL, PASSWORD)
-    org_role = OrgRole.objects.get(organization=organization, is_admin=False)
-    UserProfile.objects.create(user=user, org_role=org_role)
+    org_role = models.OrgRole.objects.get(organization=organization, is_admin=False)
+    models.UserProfile.objects.create(user=user, org_role=org_role)
     return user
 
 @pytest.fixture
@@ -56,8 +54,8 @@ def affiliated_admin_user(db, organization) -> User:
     Return an admin User object(affiliated)
     """
     user = User.objects.create_user(EMAIL_ADMIN, EMAIL_ADMIN, PASSWORD)
-    org_role = OrgRole.objects.get(organization=organization, is_admin=True)
-    UserProfile.objects.create(user=user, org_role=org_role)
+    org_role = models.OrgRole.objects.get(organization=organization, is_admin=True)
+    models.UserProfile.objects.create(user=user, org_role=org_role)
     return user
 
 @pytest.fixture
