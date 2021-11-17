@@ -1,14 +1,13 @@
-from rest_framework import serializers
+from datetime import datetime
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
 from rest_framework.views import APIView
 from rest_framework import status
+
 from identity.models import Organization
 from listing.models import Donation, Request
 from listing.serializers import DonationSerializer, RequestSerializer
-from datetime import datetime
-from django.utils import timezone
 
 class DonationView(APIView):
     permission_classes = (IsAuthenticated,)

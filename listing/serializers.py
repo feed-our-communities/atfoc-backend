@@ -1,9 +1,9 @@
-from django.contrib.auth.models import User, Group
-from rest_framework import serializers
-from identity.models import Organization
-from listing.models import TraitType, Donation, DonationTraits, Request, RequestTraits
 from datetime import datetime
 from django.utils import timezone
+from rest_framework import serializers
+
+from identity.models import Organization
+from listing.models import TraitType, Donation, DonationTraits, Request, RequestTraits
 
 class DonationSerializer(serializers.Serializer):
     org_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Organization.objects.all()) # required

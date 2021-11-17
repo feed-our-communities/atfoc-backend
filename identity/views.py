@@ -1,16 +1,16 @@
-from django.db.models import query
-from django.shortcuts import render
-from rest_framework import permissions
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+
+from rest_framework import viewsets, status
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from identity import serializers
 from identity import models
-from django.contrib.auth.models import User
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authtoken.views import ObtainAuthToken
-from django.shortcuts import get_object_or_404
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from rest_framework import viewsets
 
 # Create your views here.
 
@@ -59,3 +59,39 @@ class JoinRequestViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListM
     permissions_classes = (IsAuthenticated,)
     serializer_class = serializers.JoinRequestSerializer
     filterset_fields = ['status', 'organization']
+
+class OrgMembersView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request, format=None, **kwargs):
+        org_id = request.query_params.get('org_id', None)
+        try:
+            org = models.Organization.objects.get(id=org_id)
+        except (models.Organization.DoesNotExist, ValueError):
+            return Response(
+                {"message": "Invalid org_id parameter value"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # check if the calling user is the org admin of the org
+        org_role = request.user.userprofile.org_role
+        if not (org_role.organization == org and org_role.is_admin == True):
+            return Response(
+                    {"message": "You are not an admin of org " + str(org_id)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        
+        admins = models.UserProfile.objects.filter(org_role__organization__exact=org_id, org_role__is_admin__exact=True)
+        non_admin = models.UserProfile.objects.filter(org_role__organization__exact=org_id, org_role__is_admin__exact=False)
+        admin_serializer = serializers.OrgMembersSerializer(admins, many=True)
+        non_admin_serializer = serializers.OrgMembersSerializer(non_admin, many=True)
+
+        data = {
+            "members" : non_admin_serializer.data,
+            "admins" : admin_serializer.data
+        }
+
+        print(data)
+
+        return Response(data, status=status.HTTP_200_OK)
+        
+        

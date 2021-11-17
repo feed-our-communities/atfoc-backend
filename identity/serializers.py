@@ -1,11 +1,11 @@
-from django.db.models import fields
-from django.db.models.fields.related import ForeignKey
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from identity import models
 from rest_framework.validators import UniqueValidator
+from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
+
+from identity import models
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,3 +91,16 @@ class JoinRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.JoinRequest
         fields = ['id', 'user', 'organization', 'note', 'status']
+
+
+class OrgMembersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserProfile
+        fields = ['user', 'org_role']
+    
+    def to_representation(self, instance):
+        rep = dict()
+        rep['user_id'] = instance.user.id
+        rep['first'] = instance.user.first_name
+        rep['last'] = instance.user.last_name
+        return rep
