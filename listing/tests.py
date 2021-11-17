@@ -35,6 +35,9 @@ REQUEST_DESCRIPTION="test request description"
 
 TEST_DIR = 'test_data'
 
+"""
+Fixtures
+"""
 @pytest.fixture
 @override_settings(MEDIA_ROOT=(TEST_DIR))
 def picture():

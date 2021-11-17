@@ -91,3 +91,16 @@ class JoinRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.JoinRequest
         fields = ['id', 'user', 'organization', 'note', 'status']
+
+
+class OrgMembersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserProfile
+        fields = ['user', 'org_role']
+    
+    def to_representation(self, instance):
+        rep = dict()
+        rep['user_id'] = instance.user.id
+        rep['first'] = instance.user.first_name
+        rep['last'] = instance.user.last_name
+        return rep
