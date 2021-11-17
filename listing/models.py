@@ -21,3 +21,16 @@ class DonationTraits(models.Model):
         blank=False)
     donation = models.ForeignKey('Donation', on_delete=models.CASCADE)
 
+class Request(models.Model):
+    request_id = models.BigAutoField(primary_key=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    description = models.TextField()
+    creation_time = models.DateTimeField(auto_now_add=True)
+    deactivation_time = models.DateTimeField(null=True, blank=True, default=None)
+
+class RequestTraits(models.Model):
+    trait = models.IntegerField(
+        choices=TraitType.choices,
+        blank=False)
+    request = models.ForeignKey('Request', on_delete=models.CASCADE)
+
