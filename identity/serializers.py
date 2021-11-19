@@ -84,7 +84,7 @@ class OrgApplicationSerializer(serializers.ModelSerializer):
         model = models.OrgApplication
         fields = ["id", "user", "name", "address", "phone", "email", "url", "status"]
 
-class JoinRequestSerializer(serializers.ModelSerializer):
+class JoinRequestSerializerWrite(serializers.ModelSerializer):
     user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
@@ -92,6 +92,12 @@ class JoinRequestSerializer(serializers.ModelSerializer):
         model = models.JoinRequest
         fields = ['id', 'user', 'organization', 'note', 'status']
 
+class JoinRequestSerializerRead(serializers.ModelSerializer):
+    user = RegistrationSerializer()
+    organization = OrganizationSerializer()
+    class Meta:
+        model = models.JoinRequest
+        fields = ['id', 'user', 'organization', 'note', 'status']
 
 class OrgMembersSerializer(serializers.ModelSerializer):
     class Meta:

@@ -57,8 +57,13 @@ class OrgApplicationViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.Li
 class JoinRequestViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = models.JoinRequest.objects.all()
     permissions_classes = (IsAuthenticated,)
-    serializer_class = serializers.JoinRequestSerializer
+    #serializer_class = serializers.JoinRequestSerializer
     filterset_fields = ['status', 'organization']
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return serializers.JoinRequestSerializerRead
+        return serializers.JoinRequestSerializerWrite
 
 class OrgMembersView(APIView):
     permission_classes = (IsAuthenticated,)
