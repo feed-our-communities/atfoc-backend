@@ -54,7 +54,7 @@ class OrgApplicationViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.Li
     serializer_class = serializers.OrgApplicationSerializer
     filterset_fields = ['status']
 
-class JoinRequestViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class JoinRequestViewSet(viewsets.mixins.UpdateModelMixin, viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = models.JoinRequest.objects.all()
     permissions_classes = (IsAuthenticated,)
     #serializer_class = serializers.JoinRequestSerializer
@@ -64,6 +64,8 @@ class JoinRequestViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListM
         if self.action == 'list' or self.action == 'retrieve':
             return serializers.JoinRequestSerializerRead
         return serializers.JoinRequestSerializerWrite
+
+
 
 class OrgMembersView(APIView):
     permission_classes = (IsAuthenticated,)
