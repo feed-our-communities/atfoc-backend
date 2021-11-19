@@ -289,6 +289,35 @@ def test_list_joinrequest(client):
     }
     assert json.loads(json.dumps(response.data[0])) == expected
 
+@pytest.mark.django_db()
+def test_withdraw_joinrequest(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    user.first_name = "first"
+    user.last_name = "last"
+    user.save()
+    organization = models.Organization.objects.create(
+        name="name",
+        address="address",
+        email="email@example.com",
+        phone="+16088675309",
+        url="http://example.com",
+        status=models.OrgStatus.ACTIVE
+    )
+    models.UserProfile.objects.create(
+        user=user
+    )
+    join_request = models.JoinRequest.objects.create(
+        user=user,
+        organization=organization,
+        note="note",
+        status=models.ApplicationStatus.PENDING
+    )
+    token = Token.objects.create(user=user)
+    client.patch("/api/identity/joinrequests/" + str(join_request.id) + "/", {
+        "status": models.ApplicationStatus.WITHDRAWN,
+    }, HTTP_AUTHORIZATION='Token ' + token.key, content_type='application/json')
+    join_request.refresh_from_db()
+    assert join_request.status == models.ApplicationStatus.WITHDRAWN
 
 """
 Tests for GET /api/identity/org/members/
