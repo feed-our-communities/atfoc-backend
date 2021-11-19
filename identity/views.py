@@ -48,7 +48,7 @@ class OrganizationViewSet(viewsets.mixins.ListModelMixin, viewsets.mixins.Retrie
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.OrganizationSerializer
 
-class OrgApplicationViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class OrgApplicationViewSet(viewsets.mixins.UpdateModelMixin, viewsets.mixins.CreateModelMixin, viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = models.OrgApplication.objects.all()
     permissions_classes = (IsAuthenticated,)
     serializer_class = serializers.OrgApplicationSerializer

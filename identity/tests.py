@@ -178,7 +178,6 @@ def test_create_application(client):
         "url": "http://example.com"
     }
     response = client.post("/api/identity/application/", data, HTTP_AUTHORIZATION='Token ' + token.key)
-    print(response.data)
     application = models.OrgApplication.objects.get(id=response.data["id"])
     assert application.user == user
     assert application.name == "name"
@@ -206,9 +205,31 @@ def test_list_application(client):
         "address": "address",
         "email": "email@example.com",
         "phone": "+16088675309",
-        "url": "http://example.com"
+        "url": "http://example.com",
+        "status": models.ApplicationStatus.PENDING
     }
     assert dict(response.data[0]) == expected
+
+@pytest.mark.django_db()
+def test_withdraw_application(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    org_application = models.OrgApplication.objects.create(
+        name="name",
+        user=user,
+        address="address",
+        email="email@example.com",
+        phone="+16088675309",
+        url="http://example.com"
+    )
+    token = Token.objects.create(user=user)
+    client.patch(
+        "/api/identity/application/"+str(org_application.id)+"/",
+        {"status": models.ApplicationStatus.WITHDRAWN},
+        HTTP_AUTHORIZATION='Token ' + token.key,
+        content_type='application/json'
+    )
+    org_application.refresh_from_db()
+    assert org_application.status == models.ApplicationStatus.WITHDRAWN
 
 @pytest.mark.django_db()
 def test_create_joinrequest(client):
