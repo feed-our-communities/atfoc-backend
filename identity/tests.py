@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from identity import models
+import json
 
 EMAIL="email@example.com"
 EMAIL_ADMIN="email-admin@example.com"
@@ -238,6 +239,56 @@ def test_create_joinrequest(client):
     assert join_request.organization.id == organization.id
     assert join_request.note == "note"
     assert join_request.status == models.ApplicationStatus.PENDING
+
+@pytest.mark.django_db()
+def test_list_joinrequest(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    user.first_name = "first"
+    user.last_name = "last"
+    user.save()
+    organization = models.Organization.objects.create(
+        name="name",
+        address="address",
+        email="email@example.com",
+        phone="+16088675309",
+        url="http://example.com",
+        status=models.OrgStatus.ACTIVE
+    )
+    models.UserProfile.objects.create(
+        user=user
+    )
+    join_request = models.JoinRequest.objects.create(
+        user=user,
+        organization=organization,
+        note="note",
+        status=models.ApplicationStatus.PENDING
+    )
+    token = Token.objects.create(user=user)
+    response = client.get("/api/identity/joinrequests/", HTTP_AUTHORIZATION='Token ' + token.key)
+    expected_user = {
+        "id": user.id,
+        "email": "email@example.com",
+        "first": "first",
+        "last": "last"
+    }
+    expected_org = {
+        "id": organization.id,
+        "name": "name",
+        "address": "address",
+        "email": "email@example.com",
+        "phone": "+16088675309",
+        "url": "http://example.com",
+        "status": 0
+    }
+    expected = {
+        "id": join_request.id,
+        "note": "note",
+        "status": models.ApplicationStatus.PENDING,
+        "user": expected_user,
+        "organization": expected_org
+    }
+    assert json.loads(json.dumps(response.data[0])) == expected
+
 
 """
 Tests for GET /api/identity/org/members/
