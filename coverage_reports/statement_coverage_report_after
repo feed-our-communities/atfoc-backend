@@ -1,0 +1,36 @@
+Name                                                             Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------------------
+atfoc/__init__.py                                                    0      0   100%
+atfoc/settings.py                                                   28      0   100%
+atfoc/urls.py                                                        5      0   100%
+identity/__init__.py                                                 0      0   100%
+identity/admin.py                                                    7      0   100%
+identity/apps.py                                                     4      0   100%
+identity/migrations/0001_initial.py                                  7      0   100%
+identity/migrations/0002_auto_20211103_0429.py                       7      0   100%
+identity/migrations/0003_orgapplication_unique_user_pending.py       4      0   100%
+identity/migrations/0004_auto_20211106_0212.py                       4      0   100%
+identity/migrations/0005_alter_organization_url.py                   4      0   100%
+identity/migrations/__init__.py                                      0      0   100%
+identity/models.py                                                  42      0   100%
+identity/serializers.py                                             69      4    94%   68-72
+identity/tests.py                                                  138      0   100%
+identity/urls.py                                                    10      0   100%
+identity/views.py                                                   63      0   100%
+listing/__init__.py                                                  0      0   100%
+listing/admin.py                                                     6      0   100%
+listing/apps.py                                                      4      0   100%
+listing/conftest.py                                                  4      0   100%
+listing/migrations/0001_initial.py                                   6      0   100%
+listing/migrations/0002_auto_20211115_0641.py                        4      0   100%
+listing/migrations/0003_auto_20211116_0408.py                        4      0   100%
+listing/migrations/0004_alter_donation_expiration_date.py            4      0   100%
+listing/migrations/0005_request_requesttraits.py                     5      0   100%
+listing/migrations/__init__.py                                       0      0   100%
+listing/models.py                                                   26      0   100%
+listing/serializers.py                                              81      0   100%
+listing/tests.py                                                   235      0   100%
+listing/urls.py                                                      4      0   100%
+listing/views.py                                                    95      0   100%
+----------------------------------------------------------------------------------------------
+TOTAL                                                              870      4    99%
