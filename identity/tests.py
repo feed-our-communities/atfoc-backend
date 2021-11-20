@@ -88,6 +88,22 @@ def test_login(client):
     assert len(response.data["token"]) > 1
 
 @pytest.mark.django_db()
+def test_login_missing_param(client):
+    response = client.post("/api/identity/register/", {
+        "email2": "email@example.com",
+    })
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+@pytest.mark.django_db()
+def test_login_wrong_password(client):
+    User.objects.create_user("email@example.com", "email@example.com", "password")
+    response = client.post("/api/identity/register/", {
+         "email": "email@example.com",
+        "password": "password2",
+    })
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+@pytest.mark.django_db()
 def test_register(client):
     client.post("/api/identity/register/", {
         "email": "email@example.com",

@@ -81,29 +81,11 @@ def affiliated_non_admin_user(db, organization) -> User:
     return user
 
 @pytest.fixture
-def affiliated_admin_user(db, organization) -> User:
-    """
-    Return an admin User object(affiliated)
-    """
-    user = User.objects.create_user(EMAIL_ADMIN, EMAIL_ADMIN, PASSWORD)
-    org_role = OrgRole.objects.get(organization=organization, is_admin=True)
-    UserProfile.objects.create(user=user, org_role=org_role)
-    return user
-
-@pytest.fixture
 def affiliated_non_admin_user_token(db, affiliated_non_admin_user) -> Token:
     """
     Return the token of the passed in User object
     """
     token = Token.objects.create(user=affiliated_non_admin_user)
-    return token
-
-@pytest.fixture
-def affiliated_admin_user_token(db, affiliated_admin_user) -> Token:
-    """
-    Return the token of the passed in User object
-    """
-    token = Token.objects.create(user=affiliated_admin_user)
     return token
 
 @pytest.fixture
@@ -163,7 +145,6 @@ def init_request_listing2(db, organization, picture) -> Request:
         trait=0,
         request=request)
     return request
-
 
 def test_create_org_fixture(db, organization):
     """
@@ -349,6 +330,30 @@ def test_delete_donation_listing(client, db, affiliated_non_admin_user_token, in
     assert response.status_code == status.HTTP_200_OK
     assert donation.deactivation_time != None
 
+def test_delete_donation_listing_invalid_donation(client, db, affiliated_non_admin_user_token):
+    post_data = {
+        "donation_id": "fake", 
+    }
+
+    response = client.delete(DONATION_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,
+        content_type='application/json')
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+def test_delete_donation_listing_missing_param(client, db, affiliated_non_admin_user_token):
+    post_data = {
+        "donation_id2": "fake", 
+    }
+
+    response = client.delete(DONATION_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,
+        content_type='application/json')
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 """
 Tests for GET /api/listing/requests/
 """
@@ -486,3 +491,27 @@ def test_delete_request_listing(client, db, affiliated_non_admin_user_token, ini
 
     assert response.status_code == status.HTTP_200_OK
     assert request.deactivation_time != None
+
+def test_delete_request_listing_invalid_request(client, db, affiliated_non_admin_user_token):
+    post_data = {
+        "request_id": "fake", 
+    }
+
+    response = client.delete(REQUEST_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,
+        content_type='application/json')
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+def test_delete_request_listing_missing_param(client, db, affiliated_non_admin_user_token):
+    post_data = {
+        "request_id1": "fake", 
+    }
+
+    response = client.delete(REQUEST_URL,
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        data=post_data,
+        content_type='application/json')
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -74,6 +74,10 @@ class DonationView(APIView):
             # soft_delete will be triggered in save()
             serializer.save()
             return Response(status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Invalid request"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 class RequestView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -140,4 +144,8 @@ class RequestView(APIView):
             # soft_delete will be triggered in save()
             serializer.save()
             return Response(status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Invalid request"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 

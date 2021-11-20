@@ -36,6 +36,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         profile = models.UserProfile.objects.create(user=user)
         profile.save()
         return user
+        
 class CustomAuthTokenSerializer(serializers.Serializer):
     email = serializers.CharField(
         label=_("Email"),
