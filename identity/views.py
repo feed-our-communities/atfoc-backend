@@ -44,7 +44,11 @@ class CustomAuthToken(ObtainAuthToken):
             'email': user.email
         })
 
-class OrganizationViewSet(viewsets.mixins.ListModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class OrganizationViewSet(
+    viewsets.mixins.ListModelMixin,
+    viewsets.mixins.RetrieveModelMixin,
+    viewsets.mixins.CreateModelMixin,
+    viewsets.GenericViewSet):
     queryset = models.Organization.objects.filter(status=models.OrgStatus.ACTIVE)
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.OrganizationSerializer

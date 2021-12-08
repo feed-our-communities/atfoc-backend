@@ -183,6 +183,35 @@ def test_list_organization(client):
     assert dict(response.data[0]) == expected
 
 @pytest.mark.django_db()
+def test_create_organization(client):
+    user = User.objects.create_user("email@example.com", "email@example.com", "password")
+    token = Token.objects.create(user=user)
+    ORG_NAME = "name2"
+    ORG_ADDRESS = "address2"
+    ORG_EMAIL = "email@example.com"
+    ORG_PHONE = "+16088675309"
+    ORG_URL_2 = "http://example.com"
+    ORG_STATUS = 0
+    data = {
+        "name": ORG_NAME,
+        "address": ORG_ADDRESS,
+        "email": ORG_EMAIL,
+        "phone": ORG_PHONE,
+        "url": ORG_URL_2,
+        "status": ORG_STATUS
+    }
+    response = client.post("/api/identity/organization/", data, HTTP_AUTHORIZATION='Token ' + token.key)
+    assert response.status_code == status.HTTP_201_CREATED
+    organization = models.Organization.objects.get(id=response.data["id"])
+
+    assert organization.name == ORG_NAME
+    assert organization.address == ORG_ADDRESS
+    assert organization.email == ORG_EMAIL
+    assert str(organization.phone.national_number) == "6088675309"
+    assert organization.url == ORG_URL_2
+    assert organization.status == ORG_STATUS
+
+@pytest.mark.django_db()
 def test_get_organization(client):
     organization = models.Organization.objects.create(
         name="name",
