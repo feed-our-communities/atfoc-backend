@@ -16,7 +16,7 @@ ORG_PHONE="+16081112222"
 ORG_URL="test.com"
 ORG_STATUS=models.OrgStatus.ACTIVE
 
-MEMBERS_URL="/api/identity/org/members/"
+MEMBERS_URL="/api/identity/org/{org_id}/members/"
 """
 Fixtures
 """
@@ -381,11 +381,11 @@ def test_withdraw_joinrequest(client):
     assert join_request.status == models.ApplicationStatus.WITHDRAWN
 
 """
-Tests for GET /api/identity/org/members/
+Tests for GET /api/identity/org/{org_id}/members/
 """
 def test_get_members_success(client, db, affiliated_admin_user_token, organization,
         affiliated_non_admin_user, affiliated_admin_user):
-    response = client.get(MEMBERS_URL + "?org_id=" + str(organization.id), 
+    response = client.get(MEMBERS_URL.format(org_id=str(organization.id)), 
         HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key)
     expected = {
        "members": [
@@ -408,16 +408,102 @@ def test_get_members_success(client, db, affiliated_admin_user_token, organizati
     assert response.data == expected
 
 def test_get_members_invalid_org(client, db, affiliated_admin_user_token):
-    response = client.get(MEMBERS_URL + "?org_id=fake", 
+    response = client.get(MEMBERS_URL.format(org_id="fake"), 
         HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-def test_get_members_no_org(client, db, affiliated_admin_user_token):
-    response = client.get(MEMBERS_URL, 
-        HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 def test_get_members_no_access(client, db, affiliated_non_admin_user_token, organization):
-    response = client.get(MEMBERS_URL + "?org_id=" + str(organization.id), 
+    response = client.get(MEMBERS_URL.format(org_id=str(organization.id)), 
         HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+"""
+Tests for PUT /api/identity/org/members/
+Make an user a member of an organization
+Or update user's admin status
+"""
+def test_add_non_admin_member_success(client, db, affiliated_admin_user_token, organization):
+    # created an unaffilicated user
+    EMAIL = "email@example.com"
+    user = User.objects.create_user(EMAIL, "email@example.com", "password")
+    models.UserProfile.objects.create(user=user, org_role=None)
+
+    is_admin = "False"
+    post_data = {
+        "user_id": str(user.id), 
+        "is_admin": is_admin
+    }
+    response = client.put(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+
+    assert response.status_code == status.HTTP_201_CREATED
+    user = User.objects.get(username=EMAIL)
+    assert user.userprofile.org_role.id == models.OrgRole.objects.get(organization=organization, is_admin=is_admin).id
+
+def test_add_admin_member_success(client, db, affiliated_admin_user_token, organization):
+    # created an unaffilicated user
+    EMAIL = "email@example.com"
+    user = User.objects.create_user(EMAIL, "email@example.com", "password")
+    models.UserProfile.objects.create(user=user, org_role=None)
+
+    is_admin = "True"
+    post_data = {
+        "user_id": str(user.id), 
+        "is_admin": is_admin
+    }
+    response = client.put(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+
+    assert response.status_code == status.HTTP_201_CREATED
+    user = User.objects.get(username=EMAIL)
+    assert user.userprofile.org_role.id == models.OrgRole.objects.get(organization=organization, is_admin=is_admin).id
+
+def test_add_members_no_access(client, db, affiliated_non_admin_user_token, organization,
+        affiliated_non_admin_user):
+    post_data = {
+        "user_id": str(affiliated_non_admin_user.id), 
+        "is_admin": "False"
+    }
+    response = client.put(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+"""
+Tests for DELETE /api/identity/org/members/
+Remove an user from the organization
+"""
+def test_remove_members_no_access(client, db, affiliated_non_admin_user_token, organization,
+        affiliated_non_admin_user):
+    post_data = {
+        "user_id": str(affiliated_non_admin_user.id), 
+        "is_admin": "False"
+    }
+    response = client.delete(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+def test_remove_member_success(client, db, affiliated_admin_user_token, organization,
+        affiliated_non_admin_user):
+    user = affiliated_non_admin_user
+
+    post_data = {
+        "user_id": str(user.id), 
+    }
+    response = client.delete(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+
+    assert response.status_code == status.HTTP_200_OK
+    user = User.objects.get(username=affiliated_non_admin_user.username)
+    assert user.userprofile.org_role == None
+
+    affiliated_non_admin_user.save()

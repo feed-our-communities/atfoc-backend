@@ -99,9 +99,11 @@ class JoinRequestSerializerRead(serializers.ModelSerializer):
         fields = ['id', 'user', 'organization', 'note', 'status']
 
 class OrgMembersSerializer(serializers.ModelSerializer):
+    is_admin = serializers.BooleanField(required=False)
+
     class Meta:
         model = models.UserProfile
-        fields = ['user', 'org_role']
+        fields = ['user', 'org_role', 'is_admin']
     
     def to_representation(self, instance):
         rep = dict()
