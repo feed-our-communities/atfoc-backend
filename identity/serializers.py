@@ -3,6 +3,7 @@ from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
+from django.core.validators import validate_email
 
 from identity import models
 
@@ -29,7 +30,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
         password = validated_data['password']
         first = validated_data['first_name']
         last = validated_data['last_name']
-        user = User.objects.create_user(email, email, password)
+        validate_email(email)
+        user = User.objects.create_user(email, email=email, password=password)
         user.first_name = first
         user.last_name = last
         user.save()

@@ -8,7 +8,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.views import APIView, exception_handler
 
 from identity import serializers
 from identity import models
@@ -172,3 +172,14 @@ class OrgMembersView(APIView):
         return Response(
             {"message": "user removed from org" + str(org.id)},
             status=status.HTTP_200_OK)
+
+def custom_exception_handler(exc, context):
+    # Call REST framework's default exception handler first,
+    # to get the standard error response.
+    response = exception_handler(exc, context)
+
+    if isinstance(exc, ValidationError):
+        # return a 400 for all the validation error, and only return the first message
+        return Response(exc.messages[0], status=status.HTTP_400_BAD_REQUEST)
+
+    return response
