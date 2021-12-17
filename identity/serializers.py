@@ -20,10 +20,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
     last = serializers.CharField(source="last_name", max_length=128, min_length=1, required=False)
     organization = OrganizationSerializer(source='userprofile.org_role.organization', read_only=True)
     is_org_admin = serializers.BooleanField(source='userprofile.org_role.is_admin', read_only=True)
+    is_site_admin = serializers.BooleanField(source='is_superuser', read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'password', 'email', 'first', 'last', 'organization', 'is_org_admin']
+        fields = ['id', 'password', 'email', 'first', 'last', 'organization', 'is_org_admin', 'is_site_admin']
 
     def create(self, validated_data):
         email = validated_data['email']
