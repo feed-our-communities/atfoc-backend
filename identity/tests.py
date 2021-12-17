@@ -154,7 +154,8 @@ def test_info(client):
             "url": "http://example.com",
             "status": 0
         },
-        "is_org_admin": False
+        "is_org_admin": False,
+        "is_site_admin": False,
     }
     assert response.data == expected
 
@@ -359,6 +360,7 @@ def test_list_joinrequest(client):
         "id": user.id,
         "email": "email@example.com",
         "first": "first",
+        'is_site_admin': False,
         "last": "last"
     }
     expected_org = {
