@@ -163,7 +163,9 @@ class OrgMembersView(APIView):
         
         # check if the calling user is the org admin of the org
         org_role = request.user.userprofile.org_role
-        if org_role is None or not (org_role.organization == org and org_role.is_admin == True):
+        if org_role is None:
+            return self.not_org_admin_response
+        if not (org_role.organization == org and org_role.is_admin == True) and not request.user == user:
             return self.not_org_admin_response
 
         # if everything is valid, update the org role in user profile
