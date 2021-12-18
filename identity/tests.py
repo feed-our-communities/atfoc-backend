@@ -507,17 +507,6 @@ def test_add_members_no_access(client, db, affiliated_non_admin_user_token, orga
 Tests for DELETE /api/identity/org/members/
 Remove an user from the organization
 """
-def test_remove_members_no_access(client, db, affiliated_non_admin_user_token, organization,
-        affiliated_non_admin_user):
-    post_data = {
-        "user_id": str(affiliated_non_admin_user.id), 
-        "is_admin": "False"
-    }
-    response = client.delete(MEMBERS_URL.format(org_id=str(organization.id)), 
-        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
-        content_type='application/json',
-        data=post_data)
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 def test_remove_member_success(client, db, affiliated_admin_user_token, organization,
         affiliated_non_admin_user):
@@ -528,6 +517,22 @@ def test_remove_member_success(client, db, affiliated_admin_user_token, organiza
     }
     response = client.delete(MEMBERS_URL.format(org_id=str(organization.id)), 
         HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+
+    assert response.status_code == status.HTTP_200_OK
+    user = User.objects.get(username=affiliated_non_admin_user.username)
+    assert user.userprofile.org_role == None
+
+    affiliated_non_admin_user.save()
+
+def test_remove_member_self_success(client, db, organization, affiliated_non_admin_user, affiliated_non_admin_user_token):
+    user = affiliated_non_admin_user
+    post_data = {
+        "user_id": str(user.id), 
+    }
+    response = client.delete(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_non_admin_user_token.key,
         content_type='application/json',
         data=post_data)
 
