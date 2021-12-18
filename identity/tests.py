@@ -457,7 +457,7 @@ def test_add_non_admin_member_success(client, db, affiliated_admin_user_token, o
     user = User.objects.create_user(EMAIL, "email@example.com", "password")
     models.UserProfile.objects.create(user=user, org_role=None)
 
-    is_admin = "False"
+    is_admin = False
     post_data = {
         "user_id": str(user.id), 
         "is_admin": is_admin
@@ -469,7 +469,7 @@ def test_add_non_admin_member_success(client, db, affiliated_admin_user_token, o
 
     assert response.status_code == status.HTTP_201_CREATED
     user = User.objects.get(username=EMAIL)
-    assert user.userprofile.org_role.id == models.OrgRole.objects.get(organization=organization, is_admin=is_admin).id
+    assert models.OrgRole.objects.get(organization=organization, userprofile=user.userprofile).is_admin == is_admin
 
 def test_add_admin_member_success(client, db, affiliated_admin_user_token, organization):
     # created an unaffilicated user
@@ -477,7 +477,7 @@ def test_add_admin_member_success(client, db, affiliated_admin_user_token, organ
     user = User.objects.create_user(EMAIL, "email@example.com", "password")
     models.UserProfile.objects.create(user=user, org_role=None)
 
-    is_admin = "True"
+    is_admin = True
     post_data = {
         "user_id": str(user.id), 
         "is_admin": is_admin
@@ -489,7 +489,7 @@ def test_add_admin_member_success(client, db, affiliated_admin_user_token, organ
 
     assert response.status_code == status.HTTP_201_CREATED
     user = User.objects.get(username=EMAIL)
-    assert user.userprofile.org_role.id == models.OrgRole.objects.get(organization=organization, is_admin=is_admin).id
+    assert models.OrgRole.objects.get(organization=organization, userprofile=user.userprofile).is_admin == is_admin
 
 def test_add_members_no_access(client, db, affiliated_non_admin_user_token, organization,
         affiliated_non_admin_user):

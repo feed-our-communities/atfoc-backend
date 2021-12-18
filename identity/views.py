@@ -133,7 +133,9 @@ class OrgMembersView(APIView):
             return self.not_org_admin_response
 
         try:
-            org_role = models.OrgRole.objects.get(organization=org, is_admin=request.data.get('is_admin'))
+            if user_profile.org_role is not None:
+                user_profile.org_role.delete()
+            org_role = models.OrgRole.objects.create(organization=org, is_admin=request.data.get('is_admin'))
         except ValidationError:
             return Response(
                 {"message": "org_role value must be either True or False."},
