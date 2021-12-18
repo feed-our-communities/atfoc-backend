@@ -505,6 +505,21 @@ def test_add_members_no_access(client, db, affiliated_non_admin_user_token, orga
         data=post_data)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
+def test_change_admin_member_success(client, db, affiliated_admin_user_token, affiliated_non_admin_user, organization):
+    is_admin = "True"
+    post_data = {
+        "user_id": str(affiliated_non_admin_user.id), 
+        "is_admin": is_admin
+    }
+    response = client.put(MEMBERS_URL.format(org_id=str(organization.id)), 
+        HTTP_AUTHORIZATION='Token ' + affiliated_admin_user_token.key,
+        content_type='application/json',
+        data=post_data)
+
+    assert response.status_code == status.HTTP_201_CREATED
+    affiliated_non_admin_user.refresh_from_db()
+    assert affiliated_non_admin_user.userprofile.org_role.is_admin == True
+
 """
 Tests for DELETE /api/identity/org/members/
 Remove an user from the organization
